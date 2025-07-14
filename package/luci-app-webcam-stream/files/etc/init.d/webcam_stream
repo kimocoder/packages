@@ -1,0 +1,22 @@
+#!/bin/sh /etc/rc.common
+
+START=99
+STOP=15
+
+USE_PROCD=1
+PROG=/usr/bin/mjpg_streamer
+
+start_service() {
+	config_load webcam
+	config_get_bool enabled main enabled 0
+	[ "$enabled" -eq 0 ] && return 0
+
+	config_get device main device "/dev/video0"
+	config_get port main port "8080"
+	config_get resolution main resolution "1280x720"
+
+	procd_open_instance
+	procd_set_param command "$PROG" -i "input_uvc.so -d $device -r $resolution" -o "output_http.so -p $port -w /www/webcam"
+	procd_set_param respawn
+	procd_close_instance
+}

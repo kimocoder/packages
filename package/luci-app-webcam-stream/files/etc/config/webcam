@@ -1,0 +1,5 @@
+config webcam main
+	option enabled '1'
+	option device '/dev/video0'
+	option port '8080'
+	option resolution '1280x720'
