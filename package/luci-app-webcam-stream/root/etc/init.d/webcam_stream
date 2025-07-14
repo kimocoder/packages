@@ -1,0 +1,21 @@
+#!/bin/sh /etc/rc.common
+
+START=99
+
+start() {
+	config_load webcam_stream
+	config_get enabled stream enabled
+	[ "$enabled" = "1" ] || exit 0
+
+	config_get device stream device
+	config_get resolution stream resolution
+	config_get port stream port
+
+	mjpg_streamer -i "input_uvc.so -d $device -r $resolution" -o "output_http.so -p $port" &
+	echo $! > /var/run/webcam_stream.pid
+}
+
+stop() {
+	[ -f /var/run/webcam_stream.pid ] && kill "$(cat /var/run/webcam_stream.pid)"
+	rm -f /var/run/webcam_stream.pid
+}

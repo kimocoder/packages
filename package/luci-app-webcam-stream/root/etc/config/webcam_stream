@@ -1,0 +1,5 @@
+config stream
+	option device '/dev/video0'
+	option resolution '1280x720'
+	option port '8080'
+	option enabled '1'

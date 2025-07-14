@@ -1,0 +1,5 @@
+<%+header%>
+<h2>Webcam Stream Status</h2>
+<p>Access your webcam stream at:</p>
+<p><strong>http://<%=luci.http.getenv("SERVER_NAME")%>:<%=luci.model.uci.cursor():get("webcam_stream", "stream", "port")%>/</strong></p>
+<%+footer%>
