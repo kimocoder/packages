@@ -1,0 +1,3 @@
+config interface 'usb0'
+    option ifname 'usb0'
+    option proto 'dhcp'
