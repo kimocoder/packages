@@ -4,18 +4,18 @@
 
 include $(TOPDIR)/rules.mk
 
-PKG_NPM_NAME:=yarn
+PKG_NPM_NAME:=browserify
 PKG_NAME:=node-$(PKG_NPM_NAME)
-PKG_VERSION:=1.22.22
+PKG_VERSION:=17.0.1
 PKG_RELEASE:=1
 
 PKG_SOURCE:=$(PKG_NPM_NAME)-$(PKG_VERSION).tgz
 PKG_SOURCE_URL:=https://mirrors.tencent.com/npm/$(PKG_NPM_NAME)/-/ \
                 https://registry.npmjs.org/$(PKG_NPM_NAME)/-/
-PKG_HASH:=c17d3797fb9a9115bf375e31bfd30058cac6bc9c3b8807a3d8cb2094794b51ca
+PKG_HASH:=599ed96d127b06d608bc7aaff0ddbfe85d05f408d72cc378a620d766c60a8cb8
 
-PKG_MAINTAINER:=Hirokazu MORIKAWA <morikw2@gmail.com>, Patrik Laszlo <alabard@gmail.com>
-PKG_LICENSE:=BSD-2-Clause
+PKG_MAINTAINER:=Hirokazu MORIKAWA <morikw2@gmail.com>
+PKG_LICENSE:=MIT
 PKG_LICENSE_FILES:=LICENSE
 
 HOST_BUILD_DEPENDS:=node/host
@@ -28,17 +28,17 @@ PKG_BUILD_FLAGS:=no-mips16
 include $(INCLUDE_DIR)/host-build.mk
 include $(INCLUDE_DIR)/package.mk
 
-define Package/node-yarn
+define Package/node-browserify
   SUBMENU:=Node.js
   SECTION:=lang
   CATEGORY:=Languages
-  TITLE:=Fast, reliable, and secure dependency management
-  URL:=https://yarnpkg.com/
+  TITLE:=browser-side require() the node way
+  URL:=https://www.npmjs.org/package/browserify
   DEPENDS:=+node
 endef
 
-define Package/node-yarn/description
- Fast, reliable, and secure dependency management
+define Package/node-browserify/description
+ browserify will recursively analyze all the require() calls in your app in order to build a bundle you can serve up to the browser in a single <script> tag
 endef
 
 TAR_OPTIONS+= --strip-components 1
@@ -64,25 +64,26 @@ define Build/Compile
 	find $(PKG_BUILD_DIR)/node_modules -type d -empty -print0 | xargs -0 -r rmdir || true
 endef
 
-define Package/node-yarn/install
+define Package/node-browserify/install
 	$(INSTALL_DIR) $(1)/usr/lib/node/$(PKG_NPM_NAME)
 	$(CP) $(PKG_BUILD_DIR)/{package.json,LICENSE} \
 		$(1)/usr/lib/node/$(PKG_NPM_NAME)/
-	$(CP) $(PKG_BUILD_DIR)/README.md \
+	$(CP) $(PKG_BUILD_DIR)/{*.yml,*.markdown,*.md,*.js} \
 		$(1)/usr/lib/node/$(PKG_NPM_NAME)/
-	$(CP) $(PKG_BUILD_DIR)/{bin,lib} \
+	$(CP) $(PKG_BUILD_DIR)/{node_modules,lib,bin} \
+		$(1)/usr/lib/node/$(PKG_NPM_NAME)/
+	$(CP) $(PKG_BUILD_DIR)/{assets,example,test} \
 		$(1)/usr/lib/node/$(PKG_NPM_NAME)/
 	$(INSTALL_DIR) $(1)/usr/bin
-	$(LN) ../lib/node/$(PKG_NPM_NAME)/bin/yarn.js $(1)/usr/bin/yarn
-	$(LN) ../lib/node/$(PKG_NPM_NAME)/bin/yarn.js $(1)/usr/bin/yarnpkg
+	$(LN) ../lib/node/$(PKG_NPM_NAME)/bin/cmd.js $(1)/usr/bin/browserify
 	$(INSTALL_DIR) $(1)/usr/lib/node_modules
 	$(LN) ../node/$(PKG_NPM_NAME) $(1)/usr/lib/node_modules/$(PKG_NPM_NAME)
 endef
 
-define Package/node-yarn/postrm
+define Package/node-browserify/postrm
 #!/bin/sh
-rm /usr/lib/node_modules/yarn || true
-rm -rf /usr/lib/node/yarn || true
+rm /usr/lib/node_modules/browserify || true
+rm -rf /usr/lib/node/browserify || true
 endef
 
 define Host/Compile
@@ -100,14 +101,15 @@ define Host/Install
 	$(INSTALL_DIR) $(1)/lib/node_modules/$(PKG_NPM_NAME)
 	$(CP) $(HOST_BUILD_DIR)/{package.json,LICENSE} \
 		$(1)/lib/node_modules/$(PKG_NPM_NAME)/
-	$(CP) $(HOST_BUILD_DIR)/README.md \
+	$(CP) $(HOST_BUILD_DIR)/{*.yml,*.markdown,*.md,*.js} \
 		$(1)/lib/node_modules/$(PKG_NPM_NAME)/
-	$(CP) $(HOST_BUILD_DIR)/{bin,lib} \
+	$(CP) $(HOST_BUILD_DIR)/{node_modules,lib,bin} \
+		$(1)/lib/node_modules/$(PKG_NPM_NAME)/
+	$(CP) $(HOST_BUILD_DIR)/{assets,example,test} \
 		$(1)/lib/node_modules/$(PKG_NPM_NAME)/
 	$(INSTALL_DIR) $(1)/bin
-	$(LN) ../lib/node_modules/$(PKG_NPM_NAME)/bin/yarn.js $(1)/bin/yarn
-	$(LN) ../lib/node_modules/$(PKG_NPM_NAME)/bin/yarn.js $(1)/bin/yarnpkg
+	$(LN) ../lib/node_modules/$(PKG_NPM_NAME)/bin/cmd.js $(1)/bin/browserify
 endef
 
 $(eval $(call HostBuild))
-$(eval $(call BuildPackage,node-yarn))
+$(eval $(call BuildPackage,node-browserify))
