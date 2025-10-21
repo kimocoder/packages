@@ -28,25 +28,25 @@ PKG_BUILD_PARALLEL:=1
 PKG_BUILD_FLAGS:=no-mips16
 
 GO_PKG:=github.com/AdguardTeam/AdGuardHome
-GO_PKG_BUILD_PKG:=github.com/AdguardTeam/AdGuardHome
+GO_PKG_BUILD_PKG:=$(GO_PKG)
 
-AGH_VERSION_PKG:=github.com/AdguardTeam/AdGuardHome/internal/version
-GO_PKG_LDFLAGS_X:=$(AGH_VERSION_PKG).channel=release \
-	$(AGH_VERSION_PKG).version=$(PKG_VERSION) \
-	$(AGH_VERSION_PKG).committime=$(SOURCE_DATE_EPOCH) \
-	$(AGH_VERSION_PKG).goarm=$(GO_ARM) \
-	$(AGH_VERSION_PKG).gomips=$(GO_MIPS)
+GO_PKG_LDFLAGS_X:= \
+	$(GO_PKG)/internal/version.channel=release \
+	$(GO_PKG)/internal/version.version=v$(PKG_VERSION) \
+	$(GO_PKG)/internal/version.committime=$(SOURCE_DATE_EPOCH) \
+	$(GO_PKG)/internal/version.goarm=$(GO_ARM) \
+	$(GO_PKG)/internal/version.gomips=$(GO_MIPS)
 
 include $(INCLUDE_DIR)/package.mk
 include ../../lang/golang/golang-package.mk
 
 define Package/adguardhome
-	SECTION:=net
-	CATEGORY:=Network
-	TITLE:=Network-wide ads and trackers blocking DNS server
-	URL:=https://github.com/AdguardTeam/AdGuardHome
-	DEPENDS:=$(GO_ARCH_DEPENDS) +ca-bundle
-	USERID:=adguardhome=853:adguardhome=853
+  SECTION:=net
+  CATEGORY:=Network
+  TITLE:=Network-wide ads and trackers blocking DNS server
+  URL:=https://github.com/AdguardTeam/AdGuardHome
+  DEPENDS:=$(GO_ARCH_DEPENDS) +ca-bundle
+  USERID:=adguardhome=853:adguardhome=853
 endef
 
 define Package/adguardhome/conffiles
@@ -55,7 +55,7 @@ define Package/adguardhome/conffiles
 endef
 
 define Package/adguardhome/description
-Free and open source, powerful network-wide ads and trackers blocking DNS server.
+  Free and open source, powerful network-wide ads and trackers blocking DNS server.
 endef
 
 define Download/adguardhome-frontend

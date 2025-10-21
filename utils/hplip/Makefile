@@ -19,7 +19,7 @@ PKG_LICENSE_FILES:=COPYING LICENSE
 PKG_CPE_ID:=cpe:/a:hp:linux_imaging_and_printing_project
 
 PKG_BUILD_PARALLEL:=1
-PKG_BUILD_DEPENDS:=libcups
+PKG_BUILD_DEPENDS:=cups
 PKG_FIXUP:=autoreconf
 
 include $(INCLUDE_DIR)/package.mk

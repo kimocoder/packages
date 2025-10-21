@@ -17,8 +17,7 @@ PKG_SOURCE_URL:=https://codeload.github.com/eembc/coremark/tar.gz/$(PKG_SOURCE_V
 PKG_HASH:=4067e7f260218df13f2875d8f821a8ff32a84153c6e0759d7c89f96c0a8bf987
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_SOURCE_VERSION)
 
-PKG_MAINTAINER:=Lim Guo Wei <limguowei@gmail.com> \
-		Aleksander Jan Bajkowski <olek2@wp.pl>
+PKG_MAINTAINER:=Lim Guo Wei <limguowei@gmail.com>
 PKG_LICENSE:=Apache-2.0
 PKG_LICENSE_FILES:=LICENSE.md
 
@@ -48,14 +47,14 @@ define Package/coremark/config
 	config COREMARK_ENABLE_MULTITHREADING
 		bool "Enable multithreading support"
 		depends on PACKAGE_coremark
-		default n
+		default y
 		help
 			This enables multithreading support
 
 	config COREMARK_NUMBER_OF_THREADS
 		int "Number of threads"
 		depends on COREMARK_ENABLE_MULTITHREADING
-		default 2
+		default 16
 		help
 			Number of threads to run in parallel
 endef
@@ -79,6 +78,17 @@ endef
 define Package/coremark/install
 	$(INSTALL_DIR) $(1)/bin
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/coremark $(1)/bin/
+	$(INSTALL_DIR) $(1)/etc
+	$(INSTALL_BIN) ./coremark.sh $(1)/etc/
+	$(INSTALL_DIR) $(1)/etc/uci-defaults
+	$(INSTALL_BIN) ./coremark $(1)/etc/uci-defaults/xxx-coremark
+endef
+
+define Package/coremark/postinst
+#!/bin/sh
+[ -n "$${IPKG_INSTROOT}" ] || sed -i '/coremark/d' /etc/crontabs/root
+[ -n "$${IPKG_INSTROOT}" ] || echo "0 4 * * * /etc/coremark.sh" >> /etc/crontabs/root
+[ -n "$${IPKG_INSTROOT}" ] || crontab /etc/crontabs/root
 endef
 
 $(eval $(call BuildPackage,coremark))

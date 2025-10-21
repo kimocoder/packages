@@ -29,7 +29,7 @@ define Package/shairport-sync/default
   SECTION:=sound
   CATEGORY:=Sound
   TITLE:=AirPlay compatible audio player
-  DEPENDS:=@AUDIO_SUPPORT +libpthread +alsa-lib +libconfig +libdaemon +libpopt +libplist +libsodium +libgcrypt +libffmpeg-full +libuuid +nqptp +libmosquitto
+  DEPENDS:=@AUDIO_SUPPORT +libpthread +alsa-lib +libalac +libconfig +libdaemon +libpopt +libplist +libsodium +libgcrypt +libffmpeg-full +libuuid +nqptp +libmosquitto
   PROVIDES:=shairport-sync
   URL:=https://github.com/mikebrady/shairport-sync
 endef
@@ -77,6 +77,7 @@ endef
 
 CONFIGURE_ARGS += \
 	--with-alsa \
+	--with-apple-alac \
 	--with-libdaemon \
 	--with-airplay-2 \
 	--with-pipe \
@@ -113,10 +114,10 @@ define Package/shairport-sync/default/install
 	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/shairport-sync $(1)/usr/bin/
 	$(INSTALL_DIR) $(1)/etc
 	$(INSTALL_DATA) $(PKG_INSTALL_DIR)/etc/shairport-sync.conf $(1)/etc/shairport-sync.conf
-	$(INSTALL_DIR) $(1)/etc/init.d
-	$(INSTALL_BIN) ./files/shairport-sync.init $(1)/etc/init.d/shairport-sync
-	$(INSTALL_DIR) $(1)/etc/config
-	$(INSTALL_CONF) ./files/shairport-sync.config $(1)/etc/config/shairport-sync
+	#$(INSTALL_DIR) $(1)/etc/init.d
+	#$(INSTALL_BIN) ./files/shairport-sync.init $(1)/etc/init.d/shairport-sync
+	#$(INSTALL_DIR) $(1)/etc/config
+	#$(INSTALL_CONF) ./files/shairport-sync.config $(1)/etc/config/shairport-sync
 endef
 
 Package/shairport-sync-openssl/install = $(Package/shairport-sync/default/install)

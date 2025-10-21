@@ -34,6 +34,8 @@ define Package/antiblock/conffiles
 /etc/config/antiblock
 endef
 
+CMAKE_OPTIONS += -DCLANGFORMAT=""
+
 define Package/antiblock/install
 	$(INSTALL_DIR) $(1)/usr/bin
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/antiblock $(1)/usr/bin/antiblock

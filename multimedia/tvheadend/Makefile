@@ -215,6 +215,7 @@ CONFIGURE_VARS += \
 CONFIGURE_ARGS += \
 	--platform=linux \
 	--arch=$(ARCH) \
+	--$(if $(CONFIG_CCACHE),en,dis)able-ccache \
 	--disable-libsystemd_daemon \
 	--disable-dbus_1 \
 	--disable-pcre \
