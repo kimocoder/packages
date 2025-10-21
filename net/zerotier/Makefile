@@ -67,6 +67,8 @@ TARGET_CFLAGS += -isystem $(STAGING_DIR)/usr/include
 
 define Package/zerotier/conffiles
 /etc/config/zerotier
+/etc/zerotier.conf
+/etc/zerotier
 endef
 
 define Package/zerotier/install
@@ -79,7 +81,6 @@ define Package/zerotier/install
 ifeq ($(CONFIG_ZEROTIER_ENABLE_SELFTEST),y)
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/zerotier-selftest $(1)/usr/bin/
 endif
-
 	$(CP) ./files/* $(1)/
 endef
 

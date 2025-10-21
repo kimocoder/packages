@@ -399,6 +399,7 @@ FFMPEG_CONFIGURE:= \
 	--enable-static \
 	--enable-pthreads \
 	--enable-zlib \
+	--enable-protocol=rtmp,rtmps \
 	--disable-doc \
 	--disable-debug \
 	\
