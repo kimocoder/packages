@@ -1,6 +1,3 @@
-#
-# Copyright (C) 2006-2017 OpenWrt.org
-#
 # This is free software, licensed under the GNU General Public License v2.
 # See /LICENSE for more information.
 #
@@ -8,25 +5,50 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=node
-PKG_VERSION:=22.14.0
+
+ifeq ($(CONFIG_NODEJS_20),y)
+PKG_VERSION:=20.19.5
 PKG_RELEASE:=1
+PKG_HASH:=b34d3f57666d91deb6a148b604d7f2f4051d540087e9f6c627dedc1fcb866d5a
+PATCH_DIR:=./patches/v20.x
+NODEJS_BIN_SUM:=4eba5fbe1fb10753bc06e42f001a91c5cec16798b7764a3e9257adc59af47fe1
+NODE_MODULE_VERSION:=115
+else
+ifeq ($(CONFIG_NODEJS_24),y)
+PKG_VERSION:=24.10.0
+PKG_RELEASE:=1
+PKG_HASH:=fb9aa1938aa8d7b53e437184e4c5b26823db0afb5ac1cbfe6559176531e900e6
+PATCH_DIR:=./patches/v24.x
+NODEJS_BIN_SUM:=2b03c5417ce0b1076780df00e01da373bead3b4b80d1c78c1ad10ee7b918d90c
+NODE_MODULE_VERSION:=137
+else
+PKG_VERSION:=22.20.0
+PKG_RELEASE:=1
+PKG_HASH:=79a087c1e23fc97d173ad6676df5b1a4e1a02daf1acca05ee25662747c5d492c
+PATCH_DIR:=./patches/v22.x
+NODEJS_BIN_SUM:=eeaccb0378b79406f2208e8b37a62479c70595e20be6b659125eb77dd1ab2a29
 NODE_MODULE_VERSION:=127
+endif
+endif
 
 PKG_SOURCE:=$(PKG_NAME)-v$(PKG_VERSION).tar.gz
-PKG_SOURCE_URL:=https://nodejs.org/dist/v$(PKG_VERSION)
-PKG_HASH:=6c4e31ed5702dc45cfd8c435af56a36a474427e1bd7afe74c346136060beba8a
+PKG_SOURCE_URL:=https://mirrors.tencent.com/nodejs-release/v$(PKG_VERSION) \
+                https://nodejs.org/dist/v$(PKG_VERSION)
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-v$(PKG_VERSION)
-NODEJS_BIN_SUM:=9d942932535988091034dc94cc5f42b6dc8784d6366df3a36c4c9ccb3996f0c2
 HOST_BUILD_DIR:=$(BUILD_DIR_HOST)/$(PKG_NAME)-v$(PKG_VERSION)
 
-PKG_MAINTAINER:=Hirokazu MORIKAWA <morikw2@gmail.com>, Adrian Panella <ianchi74@outlook.com>
+PKG_MAINTAINER:=Hirokazu MORIKAWA <morikw2@gmail.com>
 PKG_LICENSE:=MIT
 PKG_LICENSE_FILES:=LICENSE
 PKG_CPE_ID:=cpe:/a:nodejs:node.js
 
 HOST_BUILD_DEPENDS:=python3/host
 HOST_BUILD_PARALLEL:=1
-PKG_HOST_ONLY:=1
+
+PKG_BUILD_DEPENDS:=python3/host
+PKG_BUILD_PARALLEL:=1
+PKG_INSTALL:=1
+PKG_ASLR_PIE:=0
 
 include $(INCLUDE_DIR)/host-build.mk
 include $(INCLUDE_DIR)/package.mk
@@ -37,17 +59,134 @@ define Package/node
   SUBMENU:=Node.js
   TITLE:=Node.js is a platform built on Chrome's JavaScript runtime
   URL:=https://nodejs.org/
+  DEPENDS:=@HAS_FPU @(i386||x86_64||arm||aarch64||riscv64) \
+	   +libstdcpp +libopenssl +zlib +libnghttp2 \
+	   +libcares +libatomic +NODEJS_ICU_SYSTEM:icu +NODEJS_ICU_SYSTEM:icu-full-data
   ABI_VERSION:=$(NODE_MODULE_VERSION)
-  BUILDONLY:=1
 endef
 
 define Package/node/description
   Node.js® is a JavaScript runtime built on Chrome's V8 JavaScript engine. Node.js uses
   an event-driven, non-blocking I/O model that makes it lightweight and efficient. Node.js'
    package ecosystem, npm, is the largest ecosystem of open source libraries in the world.
+
+  *** The following preparations must be made on the host side. ***
+      1. gcc 12.2 or higher is required.
+      2. To build a 32-bit target, gcc-multilib, g++-multilib are required.
+      3. Requires libatomic package. (If necessary, install the 32-bit library at the same time.)
+     ex) sudo apt-get install gcc-multilib g++-multilib
 endef
 
+define Package/node-npm
+  SECTION:=lang
+  CATEGORY:=Languages
+  SUBMENU:=Node.js
+  TITLE:=NPM stands for Node Package Manager
+  URL:=https://www.npmjs.com/
+  DEPENDS:=+node
+endef
+
+define Package/node-npm/description
+	NPM is the package manager for NodeJS
+endef
+
+define Package/node/config
+	menu "Configuration"
+
+	choice
+		prompt "Version Selection"
+		default NODEJS_22
+		help
+		 Select node.js version.
+		 The host package version is also the same.
+
+		config NODEJS_20
+			bool "20.x Maintenance LTS"
+
+		config NODEJS_22
+			bool "22.x Active LTS"
+
+		config NODEJS_24
+			bool "24.x Current"
+	endchoice
+
+	if PACKAGE_node
+		choice
+			prompt "i18n features"
+			default NODEJS_ICU_SMALL
+			help
+			 Select i18n features
+
+			config NODEJS_ICU_NONE
+				bool "Disable"
+
+			config NODEJS_ICU_SMALL
+				bool "small-icu"
+
+			config NODEJS_ICU_SYSTEM
+				depends on ARCH_64BIT
+				bool "system-icu"
+		endchoice
+	endif
+
+	config NODEJS_NPM_KEEP_CACHE
+		bool "keep npm cache (experimental)"
+		help
+		  Keep npm package cache.
+		  More space will be consumed by the cache.
+
+	config NODEJS_NPM_CACHE_DIR
+		string "Set npm cache directory" if NODEJS_NPM_KEEP_CACHE
+		default ""
+		help
+		  Store npm cache in this directory.
+		  If not set, uses './tmp'
+
+	config NODEJS_HOST_BIN
+		bool "Install the official nodejs binary package as HOSTPKG (experimental)"
+		depends on HOST_OS_LINUX
+		help
+		  Reduce build time for the host package.
+
+	endmenu
+endef
+
+NODEJS_CPU:=$(subst aarch64,arm64,$(subst x86_64,x64,$(subst i386,ia32,$(ARCH))))
+
+ifneq ($(CONFIG_ARCH_64BIT),y)
+FORCE_32BIT:=-m32
+endif
+
+MAKE_VARS+= \
+	DESTCPU=$(NODEJS_CPU) \
+	NO_LOAD='cctest.target.mk embedtest.target.mk node_mksnapshot.target.mk overlapped-checker.target.mk \
+		mkcodecache.target.mk tools/v8_gypfiles/torque_base.target.mk tools/v8_gypfiles/v8_init.target.mk' \
+	LD_LIBRARY_PATH=$(STAGING_DIR_HOSTPKG)/share/icu/current/lib
+
 HOST_MAKE_VARS+=NO_LOAD='cctest.target.mk embedtest.target.mk overlapped-checker.target.mk'
+
+CONFIGURE_VARS:= \
+	CC="$(TARGET_CC) $(TARGET_OPTIMIZATION) -flax-vector-conversions" \
+	CXX="$(TARGET_CXX) $(TARGET_OPTIMIZATION)" \
+	CC_host="$(HOSTCC) $(FORCE_32BIT)" \
+	CXX_host="$(HOSTCXX) $(FORCE_32BIT)"
+
+CONFIGURE_ARGS:= \
+	--dest-cpu=$(NODEJS_CPU) \
+	--dest-os=linux \
+	--cross-compiling \
+	--shared-zlib \
+	--shared-openssl \
+	--shared-nghttp2 \
+	--shared-cares \
+	--with-intl=$(if $(CONFIG_NODEJS_ICU_SMALL),small-icu,$(if $(CONFIG_NODEJS_ICU_SYSTEM),system-icu,none)) \
+	$(if $(findstring +neon",$(CONFIG_CPU_TYPE)),--with-arm-fpu=neon) \
+	$(if $(findstring +neon-vfpv4",$(CONFIG_CPU_TYPE)),--with-arm-fpu=neon) \
+	$(if $(findstring +vfpv4",$(CONFIG_CPU_TYPE)),--with-arm-fpu=vfpv3) \
+	$(if $(findstring +vfp",$(CONFIG_CPU_TYPE)),--with-arm-fpu=vfp) \
+	$(if $(findstring +vfpv3",$(CONFIG_CPU_TYPE)),--with-arm-fpu=vfpv3) \
+	$(if $(findstring +vfpv3-d16",$(CONFIG_CPU_TYPE)),--with-arm-fpu=vfpv3-d16) \
+	--prefix=/usr
 
 HOST_CONFIGURE_VARS:=
 HOST_CONFIGURE_ARGS:= \
@@ -55,7 +194,35 @@ HOST_CONFIGURE_ARGS:= \
 	--with-intl=small-icu \
 	--prefix=$(STAGING_DIR_HOSTPKG)
 
-ifeq ($(HOST_ARCH),x86_64)
+define Build/InstallDev
+	$(INSTALL_DIR) $(1)/usr/include
+	$(CP) $(PKG_INSTALL_DIR)/usr/include/* $(1)/usr/include/
+endef
+
+define Package/node/install
+	$(INSTALL_DIR) $(1)/usr/bin
+	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/node $(1)/usr/bin/
+endef
+
+define Package/node-npm/install
+	$(INSTALL_DIR) $(1)/usr/lib/node_modules/npm
+	$(CP) $(PKG_INSTALL_DIR)/usr/lib/node_modules/npm/{package.json,LICENSE} \
+		$(1)/usr/lib/node_modules/npm/
+	$(CP) $(PKG_INSTALL_DIR)/usr/lib/node_modules/npm/README.md \
+		$(1)/usr/lib/node_modules/npm/
+	$(CP) $(PKG_INSTALL_DIR)/usr/lib/node_modules/npm/{node_modules,bin,lib} \
+		$(1)/usr/lib/node_modules/npm/
+	$(INSTALL_DIR) $(1)/usr/bin
+	$(LN) ../lib/node_modules/npm/bin/npm-cli.js $(1)/usr/bin/npm
+	$(LN) ../lib/node_modules/npm/bin/npx-cli.js $(1)/usr/bin/npx
+endef
+
+define Package/node-npm/postrm
+#!/bin/sh
+rm -rf /usr/lib/node_modules/npm || true
+endef
+
+ifeq ($(CONFIG_NODEJS_HOST_BIN),y)
 
 NODEJS_BIN:=node-v$(PKG_VERSION)-linux-x64.tar.gz
 
@@ -84,7 +251,7 @@ define Host/Install
 	rm -f $(1)/bin/corepack
 	rm -rf $(1)/lib/node_modules/corepack
 	$(TAR) xvf $(DL_DIR)/$(NODEJS_BIN) -C $(1) --strip-components=1
-	mv $(1)/{CHANGELOG.md,LICENSE,README.md} $(1)/lib/node_modules/
+	rm -f $(1)/{CHANGELOG.md,LICENSE,README.md}
 endef
 
 else
@@ -100,3 +267,4 @@ endif
 
 $(eval $(call HostBuild))
 $(eval $(call BuildPackage,node))
+$(eval $(call BuildPackage,node-npm))
