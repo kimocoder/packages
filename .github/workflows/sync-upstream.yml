@@ -31,7 +31,7 @@ jobs:
       - name: Rebase onto upstream
         run: |
           CURRENT_BRANCH=$(git symbolic-ref --short HEAD)
-          git rebase upstream/$CURRENT_BRANCH || true
+          git rebase upstream/master || true
 
       - name: Push changes back to your repo
         uses: ad-m/github-push-action@v0.8.0
