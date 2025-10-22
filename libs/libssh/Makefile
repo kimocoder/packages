@@ -32,7 +32,7 @@ define Package/libssh
   CATEGORY:=Libraries
   URL:=$(PKG_SOURCE_URL)
   TITLE:=SSH library
-  DEPENDS:=+libpthread +librt +zlib +libmbedtls
+  DEPENDS:=+libpthread +librt +zlib +libopenssl
 endef
 
 define Package/libssh/description
@@ -46,7 +46,6 @@ CMAKE_OPTIONS += \
 	-DHAVE_TERMIOS_H=1 \
 	-DWITH_EXAMPLES:BOOL=OFF \
 	-DWITH_GCRYPT:BOOL=OFF \
-	-DWITH_MBEDTLS:BOOL=ON \
 	-DWITH_GSSAPI:BOOL=OFF \
 	-DWITH_LIBZ:BOOL=ON \
 	-DWITH_NACL:BOOL=OFF \
