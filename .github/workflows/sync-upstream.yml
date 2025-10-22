@@ -1,4 +1,4 @@
-name: Sync with upstream OpenWrt/luci
+name: Sync with upstream OpenWrt/packages
 
 on:
   schedule:
