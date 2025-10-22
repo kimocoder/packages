@@ -1,0 +1,40 @@
+name: Sync with upstream OpenWrt/luci
+
+on:
+  schedule:
+    - cron: '0 3 * * *'  # every day at 03:00 UTC
+  workflow_dispatch:      # allow manual trigger
+  push:
+    branches:
+      - development
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout your repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false  # use PAT instead
+
+      - name: Set up git identity
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Add upstream remote
+        run: git remote add upstream https://github.com/openwrt/packages.git
+
+      - name: Fetch upstream
+        run: git fetch upstream
+
+      - name: Rebase onto upstream
+        run: |
+          CURRENT_BRANCH=$(git symbolic-ref --short HEAD)
+          git rebase upstream/$CURRENT_BRANCH || true
+
+      - name: Push changes back to your repo
+        uses: ad-m/github-push-action@v0.8.0
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{ github.ref_name }}
