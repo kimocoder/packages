@@ -28,6 +28,9 @@ jobs:
       - name: Fetch upstream
         run: git fetch upstream
 
+      - name: Git pull
+        run: git pull upstream
+
       - name: Rebase onto upstream
         run: |
           CURRENT_BRANCH=$(git symbolic-ref --short HEAD)
