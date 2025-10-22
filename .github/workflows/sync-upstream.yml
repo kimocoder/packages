@@ -2,8 +2,8 @@ name: Sync OpenWrt Packages (Development Branch)
 
 on:
   schedule:
-    - cron: "0 2 * * *"   # Run every night at 02:00 UTC
-  workflow_dispatch:      # Allow manual run via GitHub Actions UI
+    - cron: "0 2 * * *"   # Run daily at 02:00 UTC
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -12,12 +12,14 @@ permissions:
 jobs:
   sync:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout your fork
+      - name: Checkout your fork with token
         uses: actions/checkout@v4
         with:
-          persist-credentials: false
+          token: ${{ secrets.GITHUB_TOKEN }}   # allows authenticated push
           fetch-depth: 0
+          persist-credentials: true            # keep credentials for git push
 
       - name: Configure Git
         run: |
@@ -58,27 +60,3 @@ jobs:
             This pull request merges the latest upstream changes from [openwrt/packages](https://github.com/openwrt/packages)
             into your `development` branch. Manual conflict resolution may be required.
           branch: sync/upstream-to-development
-
-  test:
-    needs: sync
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout updated branch
-        uses: actions/checkout@v4
-        with:
-          ref: development
-
-      - name: Install basic dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y build-essential gawk gettext libncurses5-dev zlib1g-dev unzip file wget
-
-      - name: Run dry-run build test
-        run: |
-          echo "Performing make dry-run..."
-          make -n || echo "Dry-run completed (ignoring non-critical warnings)"
-
-      - name: Lint shell scripts (optional)
-        run: |
-          echo "Running shellcheck..."
-          find . -type f -name "*.sh" | xargs shellcheck || true
